@@ -3224,25 +3224,25 @@ uint8_t MPU6050::dmpInitialize()
     uint8_t val;
     uint16_t ival;
     // Reset procedure per instructions in the "MPU-6000/MPU-6050 Register Map and Descriptions" page 41
-    I2Cdev::writeBit(devAddr, 0x6B, 7, (val = 1)); //PWR_MGMT_1: reset with 100ms delay
+    I2Cdev::writeBit(devAddr, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT, (val = 1)); //PWR_MGMT_1: reset with 100ms delay
     delay(100);
-    I2Cdev::writeBits(devAddr, 0x6A, 2, 3, (val = 0b111)); // full SIGNAL_PATH_RESET: with another 100ms delay
+    I2Cdev::writeBits(devAddr, MPU6050_RA_USER_CTRL, 2, 3, (val = 0b111)); // full SIGNAL_PATH_RESET: with another 100ms delay
     delay(100);
-    I2Cdev::writeBytes(devAddr, 0x6B, 1, &(val = 0x01)); // 1000 0001 PWR_MGMT_1:Clock Source Select PLL_X_gyro
-    I2Cdev::writeBytes(devAddr, 0x38, 1, &(val = 0x00)); // 0000 0000 INT_ENABLE: no Interrupt
-    I2Cdev::writeBytes(devAddr, 0x23, 1, &(val = 0x00)); // 0000 0000 MPU FIFO_EN: (all off) Using DMP's FIFO instead
-    I2Cdev::writeBytes(devAddr, 0x1C, 1, &(val = 0x00)); // 0000 0000 ACCEL_CONFIG: 0 =  Accel Full Scale Select: 2g
-    I2Cdev::writeBytes(devAddr, 0x37, 1, &(val = 0x80)); // 1001 0000 INT_PIN_CFG: ACTL The logic level for int pin is active low. and interrupt status bits are cleared on any read
-    I2Cdev::writeBytes(devAddr, 0x6B, 1, &(val = 0x01)); // 0000 0001 PWR_MGMT_1: Clock Source Select PLL_X_gyro
-    I2Cdev::writeBytes(devAddr, 0x19, 1, &(val = 0x09)); // 0000 0100 SMPLRT_DIV: Divides the internal sample rate 400Hz ( Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
-    I2Cdev::writeBytes(devAddr, 0x1A, 1, &(val = 0x01)); // 0000 0001 CONFIG: Digital Low Pass Filter (DLPF) Configuration 188HZ  //Im betting this will be the beat
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_PWR_MGMT_1, 1, &(val = 0x01));   // 1000 0001 PWR_MGMT_1:Clock Source Select PLL_X_gyro
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_INT_ENABLE, 1, &(val = 0x00));   // 0000 0000 INT_ENABLE: no Interrupt
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_FIFO_EN, 1, &(val = 0x00));      // 0000 0000 MPU FIFO_EN: (all off) Using DMP's FIFO instead
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_ACCEL_CONFIG, 1, &(val = 0x00)); // 0000 0000 ACCEL_CONFIG: 0 =  Accel Full Scale Select: 2g
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_INT_PIN_CFG, 1, &(val = 0x80));  // 1001 0000 INT_PIN_CFG: ACTL The logic level for int pin is active low. and interrupt status bits are cleared on any read
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_PWR_MGMT_1, 1, &(val = 0x01));   // 0000 0001 PWR_MGMT_1: Clock Source Select PLL_X_gyro
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_SMPLRT_DIV, 1, &(val = 0x04));   // 0000 0100 SMPLRT_DIV: Divides the internal sample rate 400Hz ( Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV))
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_CONFIG, 1, &(val = 0x01));       // 0000 0001 CONFIG: Digital Low Pass Filter (DLPF) Configuration 188HZ  //Im betting this will be the beat
     if (!writeProgMemoryBlock(dmpMemory, MPU6050_DMP_CODE_SIZE))
-        return 1;                                           // Loads the DMP image into the MPU6050 Memory // Should Never Fail
-    I2Cdev::writeWords(devAddr, 0x70, 1, &(ival = 0x0400)); // DMP Program Start Address
-    I2Cdev::writeBytes(devAddr, 0x1B, 1, &(val = 0x18));    // 0001 1000 GYRO_CONFIG: 3 = +2000 Deg/sec
-    I2Cdev::writeBytes(devAddr, 0x6A, 1, &(val = 0xC0));    // 1100 1100 USER_CTRL: Enable Fifo and Reset Fifo
-    // I2Cdev::writeBytes(devAddr, 0x38, 1, &(val = 0x02));    // 0000 0010 INT_ENABLE: RAW_DMP_INT_EN ons
-    I2Cdev::writeBit(devAddr, 0x6A, 2, 1); // Reset FIFO one last time just for kicks. (MPUi2cWrite reads 0x6A first and only alters 1 bit and then saves the byte)
+        return 1;                                                           // Loads the DMP image into the MPU6050 Memory // Should Never Fail
+    I2Cdev::writeWords(devAddr, MPU6050_RA_DMP_CFG_1, 1, &(ival = 0x0400)); // DMP Program Start Address
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_GYRO_CONFIG, 1, &(val = 0x18));  // 0001 1000 GYRO_CONFIG: 3 = +2000 Deg/sec
+    I2Cdev::writeBytes(devAddr, MPU6050_RA_USER_CTRL, 1, &(val = 0xC0));    // 1100 1100 USER_CTRL: Enable Fifo and Reset Fifo
+    // I2Cdev::writeBytes(devAddr, 0x38, 1, &(val = 0x02));    // 0000 0010 INT_ENABLE: RAW_DMP_INT_EN on
+    I2Cdev::writeBit(devAddr, MPU6050_RA_USER_CTRL, 2, 1); // Reset FIFO one last time just for kicks. (MPUi2cWrite reads 0x6A first and only alters 1 bit and then saves the byte)
 
     setDMPEnabled(false); // disable DMP for compatibility with the MPU6050 library
                           /*
@@ -3386,9 +3386,9 @@ uint8_t MPU6050::dmpGetGyro(VectorInt16 *v, const uint8_t *packet)
 uint8_t MPU6050::dmpGetLinearAccel(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gravity)
 {
     // get rid of the gravity component (+1g = +8192 in standard DMP FIFO packet, sensitivity is 2g)
-    v->x = vRaw->x - gravity->x * 8192;
-    v->y = vRaw->y - gravity->y * 8192;
-    v->z = vRaw->z - gravity->z * 8192;
+    v->x = vRaw->x - gravity->x * 16384;
+    v->y = vRaw->y - gravity->y * 16384;
+    v->z = vRaw->z - gravity->z * 16384;
     return 0;
 }
 // uint8_t MPU6050::dmpGetLinearAccelInWorld(long *data, const uint8_t* packet);
